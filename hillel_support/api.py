@@ -38,29 +38,45 @@ ExchangeRates = List[ExchangeRate]
 
 class ExchangeRatesHistory:
     PATH_TO_FILE = os.path.join("history.json")
-    history_data = {}
-    history_res = []
+    history_data: 'ExchangeRates' = []
+
     @classmethod
-    def read_history_file(cls):
+    def read_history_file(cls) -> None:
         with open(cls.PATH_TO_FILE, "r") as file:
-            cls.history_data = json.load(file)
-
-        return cls.history_data
+            if cls.history_data:
+                data = json.load(file)
+                cls.history_data = data["results"]
 
     @classmethod
-    def add(cls, instance: ExchangeRate) -> None:
-        cls.save_to_file(instance)
+    def add(cls, instance: 'ExchangeRate') -> None:
+        cls.read_history_file()
+
+        instance = asdict(instance)
+        if not cls.history_data:
+            cls.history_data.append(instance)
+        elif cls.history_data[-1] != instance:
+            cls.history_data.append(instance)
 
     @classmethod
     def as_dict(cls) -> dict:
-        return {"results": [asdict(er) for er in cls.history_data]}
+        return {"results": [data for data in cls.history_data]}
 
     @classmethod
-    def save_to_file(cls, instance: ExchangeRate) -> None:
-        cls.history_res.append(instance)
-
+    def save_to_file(cls, history_dict: dict) -> None:
         with open(cls.PATH_TO_FILE, "w") as file:
-            json.dump(asdict(instance), file)
+            json.dump(history_dict, file)
+
+    @classmethod
+    def save_history(cls) -> dict:
+
+        if not cls.history_data:
+            cls.read_history_file()
+            history_dict = cls.as_dict()
+        elif cls.history_data:
+            history_dict = cls.as_dict()
+
+        cls.save_to_file(history_dict)
+        return history_dict
 
 
 def btc_usd(request):
@@ -72,7 +88,6 @@ def btc_usd(request):
     )
 
     response = requests.get(url)
-
     exchange_rate = ExchangeRate.from_response(response)
     ExchangeRatesHistory.add(exchange_rate)
 
@@ -80,4 +95,4 @@ def btc_usd(request):
 
 
 def history(request):
-    return JsonResponse(ExchangeRatesHistory.read_history_file())
+    return JsonResponse(ExchangeRatesHistory.save_history())
