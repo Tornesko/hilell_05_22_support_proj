@@ -9,4 +9,3 @@ urlpatterns = [
     path("btc_usd/", btc_usd),
     path("history/", history),
 ]
-
