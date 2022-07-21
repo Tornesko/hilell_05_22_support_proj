@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import asdict, dataclass
+from typing import List
 
 import requests
 from django.http import JsonResponse
@@ -30,35 +33,44 @@ class ExchangeRate:
         return self.value == other.value
 
 
-ExchangeRates = list[ExchangeRate]
+ExchangeRates = List[ExchangeRate]
 
 
 class ExchangeRatesHistory:
-    _history: ExchangeRates = []
+    PATH_TO_FILE = os.path.join("history.json")
+    history_data = {}
+    history_res = []
+    @classmethod
+    def read_history_file(cls):
+        with open(cls.PATH_TO_FILE, "r") as file:
+            cls.history_data = json.load(file)
+
+        return cls.history_data
 
     @classmethod
     def add(cls, instance: ExchangeRate) -> None:
-        """We woud like to add ExchangeRates instances if it is not last duplicated"""
-
-        if not cls._history:
-            cls._history.append(instance)
-        elif cls._history[-1] != instance:
-            cls._history.append(instance)
+        cls.save_to_file(instance)
 
     @classmethod
     def as_dict(cls) -> dict:
-        """Main representation interface"""
+        return {"results": [asdict(er) for er in cls.history_data]}
 
-        return {"results": [asdict(er) for er in cls._history]}
+    @classmethod
+    def save_to_file(cls, instance: ExchangeRate) -> None:
+        cls.history_res.append(instance)
+
+        with open(cls.PATH_TO_FILE, "w") as file:
+            json.dump(asdict(instance), file)
 
 
 def btc_usd(request):
     # NOTE: Connect to the external exchange rates API
     API_KEY = "82I46WMYT3C7EX3J"
     url = (
-        "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&"
-        f"from_currency=BTC&to_currency=USD&apikey={API_KEY}"
+        "https://www.alphavantage.co/"
+        f"query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=USD&apikey={API_KEY}"
     )
+
     response = requests.get(url)
 
     exchange_rate = ExchangeRate.from_response(response)
@@ -68,4 +80,4 @@ def btc_usd(request):
 
 
 def history(request):
-    return JsonResponse(ExchangeRatesHistory.as_dict())
+    return JsonResponse(ExchangeRatesHistory.read_history_file())
