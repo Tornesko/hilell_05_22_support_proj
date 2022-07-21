@@ -38,7 +38,7 @@ ExchangeRates = List[ExchangeRate]
 
 class ExchangeRatesHistory:
     PATH_TO_FILE = os.path.join("history.json")
-    history_data: 'ExchangeRates' = []
+    history_data: "ExchangeRates" = []
 
     @classmethod
     def read_history_file(cls) -> None:
@@ -48,7 +48,7 @@ class ExchangeRatesHistory:
                 cls.history_data = data["results"]
 
     @classmethod
-    def add(cls, instance: 'ExchangeRate') -> None:
+    def add(cls, instance: "ExchangeRate") -> None:
         cls.read_history_file()
 
         instance = asdict(instance)
