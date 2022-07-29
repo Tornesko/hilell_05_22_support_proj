@@ -1,5 +1,5 @@
 """
-ASGI config for hillel_support project.
+ASGI hillel_support for hillel_support project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

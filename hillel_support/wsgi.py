@@ -1,5 +1,5 @@
 """
-WSGI config for hillel_support project.
+WSGI hillel_support for hillel_support project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
