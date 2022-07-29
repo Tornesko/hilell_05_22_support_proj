@@ -4,6 +4,7 @@ from django.db import models
 
 # Create your models here.
 
+
 class TimeStampMixin(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -13,7 +14,6 @@ class TimeStampMixin(models.Model):
 
 
 class CustomUserManager(UserManager):
-
     def create_user(self, email, username=None, password=None, **kwargs):
         if not email:
             raise ValueError("Email field is required")
